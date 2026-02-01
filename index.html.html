@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarf Master Pro - Malayalam Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Manjari:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        :root { 
+            --primary: #004d40; --secondary: #00796b; --accent: #ffc107; 
+            --danger: #d32f2f; --bg: #e0f2f1;
+        }
+        body { font-family: 'Amiri', 'Manjari', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .wrapper { max-width: 1400px; margin: auto; }
+        
+        .main-layout { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+        @media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; } }
+
+        .sidebar { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px; text-align: right; }
+        
+        .content-area { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
+        .card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: none; border-top: 6px solid var(--primary); }
+        .card h3 { background: var(--primary); color: white; margin: 0; padding: 12px; text-align: center; font-size: 1.5rem; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        td { padding: 10px; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 1.2rem; }
+        .meaning-col { font-family: 'Manjari'; font-size: 0.85rem; color: #444; background: #fffde7; border-right: 1px solid #eee; width: 35%; }
+        .pronoun { color: #888; font-size: 0.8rem; background: #fafafa; width: 20%; }
+
+        input, select, button { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 2px solid #ddd; font-family: 'Amiri'; font-size: 1.1rem; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: var(--secondary); }
+        
+        .root-tag { display: inline-block; padding: 5px 12px; background: #eee; border-radius: 8px; margin: 4px; font-weight: bold; }
+        .status-badge { padding: 8px; border-radius: 10px; text-align: center; margin-top: 10px; font-size: 0.9rem; width: 100%; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="main-layout">
+        <aside class="sidebar animate__animated animate__fadeInLeft">
+            <h2 style="color: var(--primary); margin-top:0;">Sarf Master Pro</h2>
+            <p style="font-family: 'Manjari'; font-size: 0.9rem;">ക്രിയയുടെ മാറ്റങ്ങളും അർത്ഥവും</p>
+            
+            <input type="text" id="verbIn" placeholder="ക്രിയ നൽകുക (eg: كتب)" maxlength="3">
+            <select id="vowelIn">
+                <option value="ُ">Mudari: Damma (ـُ)</option>
+                <option value="ِ">Mudari: Kasra (ـِ)</option>
+                <option value="َ">Mudari: Fatha (ـَ)</option>
+            </select>
+            <button onclick="processAll()">സറഫാക്കുക ✨</button>
+
+            <div id="analysis" style="display:none; margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+                <h4 style="margin:0;">Root (അടിസ്ഥാനം)</h4>
+                <div id="rootDisp"></div>
+                <div id="typeBadge" class="status-badge" style="background:#e8f5e9; color:#2e7d32; border:1px solid #2e7d32;"></div>
+            </div>
+            <div id="error" style="display:none;" class="status-badge" style="background:#ffebee; color:#c62828;">ക്രിയ ലഭ്യമല്ല!</div>
+        </aside>
+
+        <main class="content-area">
+            <div class="card" id="c1"><h3>الماضي (Past)</h3><table id="t1"></table></div>
+            <div class="card" id="c2"><h3>المضارع (Present)</h3><table id="t2"></table></div>
+            <div class="card" id="c3" style="border-top-color: var(--accent);"><h3>الأمر (Command)</h3><table id="t3"></table></div>
+            <div class="card" id="c4" style="border-top-color: var(--danger);"><h3>النهي (Prohibition)</h3><table id="t4"></table></div>
+        </main>
+    </div>
+</div>
+
+<script>
+    function processAll() {
+        const raw = document.getElementById('verbIn').value.trim();
+        const v = document.getElementById('vowelIn').value;
+        const root = raw.replace(/[\u064B-\u0652]/g, "");
+
+        if (root.length !== 3) {
+            document.getElementById('analysis').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            return;
+        }
+
+        document.getElementById('error').style.display = 'none';
+        document.getElementById('analysis').style.display = 'block';
+
+        let f = root[0], a = root[1], l = root[2];
+        let type = (f === 'و') ? "Mithal" : (a === 'ا' || a === 'و') ? "Ajwaf" : (l === 'ا' || l === 'ى') ? "Naqis" : "Sahih";
+        
+        document.getElementById('rootDisp').innerHTML = `<span class="root-tag">${f}</span><span class="root-tag">${a}</span><span class="root-tag">${l}</span>`;
+        document.getElementById('typeBadge').innerText = "Type: " + type;
+
+        const pr = ["هو", "هما", "هم", "هي", "هما", "هن", "أنت", "أنتما", "أنتم", "أنتِ", "أنتما", "أنتن", "أنا", "نحن"];
+        const mMean = ["അവൻ ചെയ്തു", "അവർ രണ്ടുപേർ ചെയ്തു", "അവർ ചെയ്തു", "അവൾ ചെയ്തു", "അവർ രണ്ടുപേർ(f) ചെയ്തു", "അവർ(f) ചെയ്തു", "നീ ചെയ്തു", "നിങ്ങൾ രണ്ടുപേർ ചെയ്തു", "നിങ്ങൾ ചെയ്തു", "നീ(f) ചെയ്തു", "നിങ്ങൾ രണ്ടുപേർ(f) ചെയ്തു", "നിങ്ങൾ(f) ചെയ്തു", "ഞാൻ ചെയ്തു", "ഞങ്ങൾ ചെയ്തു"];
+        const muMean = ["അവൻ ചെയ്യുന്നു", "അവർ രണ്ടുപേർ ചെയ്യുന്നു", "അവർ ചെയ്യുന്നു", "അവൾ ചെയ്യുന്നു", "അവർ രണ്ടുപേർ(f) ചെയ്യുന്നു", "അവർ(f) ചെയ്യുന്നു", "നീ ചെയ്യുന്നു", "നിങ്ങൾ രണ്ടുപേർ ചെയ്യുന്നു", "നിങ്ങൾ ചെയ്യുന്നു", "നീ(f) ചെയ്യുന്നു", "നിങ്ങൾ രണ്ടുപേർ(f) ചെയ്യുന്നു", "നിങ്ങൾ(f) ചെയ്യുന്നു", "ഞാൻ ചെയ്യുന്നു", "ഞങ്ങൾ ചെയ്യുന്നു"];
+
+        let mH = "", muH = "";
+        for(let i=0; i<14; i++) {
+            let mWord = (type==="Ajwaf" && i>5) ? (f+"ُ"+l) : (f+"َ"+a+"َ"+l);
+            let muPrefix = (i<6?"يَ":i<12?"تَ":i==12?"أَ":"نَ");
+            let muWord = (type==="Mithal") ? (muPrefix+a+v+l) : (muPrefix+f+"ْ"+a+v+l);
+            
+            mH += `<tr><td class="pronoun">${pr[i]}</td><td>${mWord}</td><td class="meaning-col">${mMean[i]}</td></tr>`;
+            muH += `<tr><td class="pronoun">${pr[i]}</td><td>${muWord}</td><td class="meaning-col">${muMean[i]}</td></tr>`;
+        }
+
+        const amrPr = ["നീ", "നിങ്ങൾ 2", "നിങ്ങൾ", "നീ(f)", "നിങ്ങൾ 2(f)", "നിങ്ങൾ(f)"];
+        const amrMean = ["നീ ചെയ്യുക", "നിങ്ങൾ 2 പേർ ചെയ്യുക", "നിങ്ങൾ ചെയ്യുക", "നീ(f) ചെയ്യുക", "നിങ്ങൾ 2(f) ചെയ്യുക", "നിങ്ങൾ(f) ചെയ്യുക"];
+        const nahyMean = ["നീ ചെയ്യരുത്", "നിങ്ങൾ 2 പേർ ചെയ്യരുത്", "നിങ്ങൾ ചെയ്യരുത്", "നീ(f) ചെയ്യരുത്", "നിങ്ങൾ 2(f) ചെയ്യരുത്", "നിങ്ങൾ(f) ചെയ്യരുത്"];
+        
+        let aH = "", nH = "";
+        let amrStart = (v === "ُ") ? "اُ" : "اِ";
+        let base = (type==="Mithal") ? (a+v+l) : (f+"ْ"+a+v+l);
+        let sfx = ["ْ", "َا", "ُوا", "ِي", "َا", "ْنَ"];
+
+        for(let i=0; i<6; i++) {
+            aH += `<tr><td class="pronoun">${amrPr[i]}</td><td>${amrStart}${base}${sfx[i]}</td><td class="meaning-col">${amrMean[i]}</td></tr>`;
+            nH += `<tr><td class="pronoun">${amrPr[i]}</td><td>لَا تَ${base}${sfx[i]}</td><td class="meaning-col">${nahyMean[i]}</td></tr>`;
+        }
+
+        document.getElementById('t1').innerHTML = mH; document.getElementById('t2').innerHTML = muH;
+        document.getElementById('t3').innerHTML = aH; document.getElementById('t4').innerHTML = nH;
+        document.querySelectorAll('.card').forEach(c => c.style.display = 'block');
+    }
+</script>
+</body>
+</html>
